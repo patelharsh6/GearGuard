@@ -22,13 +22,7 @@ export default function Navbar({ onMenuClick }) {
         <h3 className="brand-name">GearGuard</h3>
       </div>
 
-      <div className="profile-pill">
-        <div className="profile-info">
-          <span className="profile-role">Admin</span>
-          <span className="profile-status">Online</span>
-        </div>
-        <div className="avatar-container">A</div>
-      </div>
+      
     </nav>
   );
 }

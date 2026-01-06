@@ -46,7 +46,7 @@ export default function TeamList() {
           <h1>Maintenance Teams</h1>
           <p>Manage technical groups and assignments</p>
         </div>
-        <button onClick={() => navigate("/teams/add")} className="btn-primary">
+        <button onClick={() => navigate("/teams/new")} className="btn-primary">
           <FiPlus size={18} /> New Team
         </button>
       </div>

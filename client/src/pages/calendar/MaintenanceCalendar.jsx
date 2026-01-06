@@ -1,115 +1,131 @@
-import React from "react";
-import { motion } from "framer-motion";
+import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import axios from "axios";
 import FullCalendar from "@fullcalendar/react";
 import dayGridPlugin from "@fullcalendar/daygrid";
 import interactionPlugin from "@fullcalendar/interaction";
-import "./MaintenanceCalendar.css"; // Import the CSS
+import { FiLoader, FiAlertCircle } from "react-icons/fi";
+import "./MaintenanceCalendar.css"; 
 
 export default function MaintenanceCalendar() {
-  const events = [
-    {
-      title: "AC Preventive Service",
-      date: "2025-12-10",
-      extendedProps: { priority: "Medium" }, // Correct way to store extra data
-    },
-    {
-      title: "Generator Inspection",
-      date: "2025-12-15",
-      extendedProps: { priority: "High" },
-    },
-    {
-      title: "Server Maintenance",
-      date: "2025-12-27",
-      extendedProps: { priority: "Low" },
-    },
-    {
-      title: "Conveyor Belt Check",
-      date: "2025-12-28",
-      extendedProps: { priority: "High" },
-    },
-  ];
+  const navigate = useNavigate();
+  const [events, setEvents] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  function handleDateClick(info) {
-    // In a real app, open a modal here
-    const confirm = window.confirm(`Schedule new maintenance on ${info.dateStr}?`);
-    if (confirm) {
-      console.log("Open Create Modal");
+  useEffect(() => {
+    fetchEvents();
+  }, []);
+
+  async function fetchEvents() {
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) { navigate("/login"); return; }
+      
+      const config = { headers: { Authorization: `Bearer ${token}` } };
+      
+      // 1. Get Data from Backend
+      const response = await axios.get("http://localhost:5000/api/maintenance", config);
+      
+      // 2. Transform Data for FullCalendar
+      // Backend: { _id, name, scheduled_date, priority }
+      // Calendar Needs: { id, title, date, extendedProps }
+      const formattedEvents = response.data
+        .filter(task => task.scheduled_date) // Only show tasks with dates
+        .map(task => ({
+          id: task._id,
+          title: task.name,
+          date: task.scheduled_date.split("T")[0], // Remove time part
+          extendedProps: { 
+            priority: task.priority,
+            equipment: task.equipmentName || "Unknown"
+          }
+        }));
+
+      setEvents(formattedEvents);
+    } catch (error) {
+      console.error("Error loading calendar:", error);
+    } finally {
+      setLoading(false);
     }
   }
 
-  // Custom Event Rendering (The Pills)
+  // Handle clicking an event (Go to Details)
+  function handleEventClick(info) {
+    navigate(`/maintenance/${info.event.id}`);
+  }
+
+  // Handle clicking an empty date (Go to Create New)
+  function handleDateClick(info) {
+    // Navigate to create page with pre-filled date (Optional feature)
+    // You could pass state here: navigate("/maintenance/new", { state: { date: info.dateStr } })
+    navigate("/maintenance/new"); 
+  }
+
+  // Custom "Pill" Rendering
   function renderEventContent(eventInfo) {
     const priority = eventInfo.event.extendedProps.priority;
     const style = getPriorityStyle(priority);
 
     return (
-      <div
-        style={{
-          background: style.bg,
-          color: style.text,
-          borderLeft: `3px solid ${style.border}`,
-          padding: "4px 8px",
-          borderRadius: "4px",
-          fontSize: "11px",
-          fontWeight: "600",
-          overflow: "hidden",
-          textOverflow: "ellipsis",
-          whiteSpace: "nowrap",
-          width: "100%",
-          display: "flex",
-          alignItems: "center",
-          gap: "5px"
-        }}
-      >
-        {eventInfo.event.title}
+      <div className="fc-event-custom" style={style.css}>
+        <div className="fc-event-dot" style={{ background: style.dot }}></div>
+        <div className="fc-event-text">
+          <span className="fc-title">{eventInfo.event.title}</span>
+          <span className="fc-desc">{eventInfo.event.extendedProps.equipment}</span>
+        </div>
       </div>
     );
   }
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.4 }}
-      className="calendar-container"
-    >
+    <div className="calendar-page-container">
       {/* HEADER */}
-      <div className="calendar-header">
-        <h1>Maintenance Calendar</h1>
-        <p>Preventive maintenance scheduling & overview</p>
-      </div>
-
-      {/* LEGEND */}
-      <div className="legend-container">
-        <LegendItem color="#ef4444" label="High Priority" />
-        <LegendItem color="#f59e0b" label="Medium Priority" />
-        <LegendItem color="#22c55e" label="Low Priority" />
+      <div className="calendar-header-section">
+        <div>
+          <h1>Maintenance Schedule</h1>
+          <p>Overview of upcoming preventive and corrective tasks</p>
+        </div>
+        
+        {/* LEGEND */}
+        <div className="legend-row">
+          <LegendItem color="#ef4444" label="Critical" />
+          <LegendItem color="#f59e0b" label="Medium" />
+          <LegendItem color="#22c55e" label="Low" />
+        </div>
       </div>
 
       {/* CALENDAR CARD */}
-      <div className="calendar-card">
-        <FullCalendar
-          plugins={[dayGridPlugin, interactionPlugin]}
-          initialView="dayGridMonth"
-          height="auto" // Adapts height based on rows
-          contentHeight="auto"
-          events={events}
-          dateClick={handleDateClick}
-          eventContent={renderEventContent}
-          headerToolbar={{
-            left: "title",
-            center: "",
-            right: "today prev,next",
-          }}
-          dayMaxEventRows={3} // Show "+more" if too many events
-          fixedWeekCount={false} // Don't show empty rows for next month
-        />
+      <div className="calendar-card-wrapper">
+        {loading ? (
+          <div className="calendar-loading">
+            <FiLoader className="spin" size={30} /> Loading schedule...
+          </div>
+        ) : (
+          <FullCalendar
+            plugins={[dayGridPlugin, interactionPlugin]}
+            initialView="dayGridMonth"
+            headerToolbar={{
+              left: "prev,next today",
+              center: "title",
+              right: "dayGridMonth,dayGridWeek"
+            }}
+            height="auto"
+            contentHeight="auto"
+            events={events}
+            eventClick={handleEventClick} // ✅ Click event -> Details
+            dateClick={handleDateClick}   // ✅ Click date -> Create
+            eventContent={renderEventContent}
+            dayMaxEventRows={3}
+            fixedWeekCount={false} 
+            firstDay={1} // Start week on Monday
+          />
+        )}
       </div>
-    </motion.div>
+    </div>
   );
 }
 
-/* ---------- HELPERS & SUB-COMPONENTS ---------- */
+/* ---------- HELPERS ---------- */
 
 function LegendItem({ color, label }) {
   return (
@@ -121,13 +137,19 @@ function LegendItem({ color, label }) {
 }
 
 function getPriorityStyle(priority) {
-  switch (priority) {
-    case "High":
-      return { bg: "#fee2e2", text: "#991b1b", border: "#ef4444" };
-    case "Medium":
-      return { bg: "#fef3c7", text: "#92400e", border: "#f59e0b" };
-    case "Low":
-    default:
-      return { bg: "#dcfce7", text: "#166534", border: "#22c55e" };
-  }
+  // Map DB Values (0,1,2,3) to Colors
+  let color = "green"; // Default Low
+  
+  if (priority === '1' || priority === 'Medium') color = "orange";
+  if (priority === '2' || priority === 'High') color = "red";
+  if (priority === '3' || priority === 'Critical') color = "darkred";
+
+  const styles = {
+    green:   { css: { background: "#dcfce7", color: "#14532d", borderLeft: "3px solid #22c55e" }, dot: "#22c55e" },
+    orange:  { css: { background: "#ffedd5", color: "#7c2d12", borderLeft: "3px solid #f97316" }, dot: "#f97316" },
+    red:     { css: { background: "#fee2e2", color: "#7f1d1d", borderLeft: "3px solid #ef4444" }, dot: "#ef4444" },
+    darkred: { css: { background: "#7f1d1d", color: "#ffffff", borderLeft: "3px solid #450a0a" }, dot: "#ffffff" },
+  };
+
+  return styles[color] || styles.green;
 }

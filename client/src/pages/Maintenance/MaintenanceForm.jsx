@@ -6,227 +6,169 @@ import {
   FiSave, 
   FiInfo, 
   FiTool, 
-  FiFileText 
+  FiFileText,
+  FiUser, // Added icon for technician
+  FiLoader 
 } from "react-icons/fi"; 
 import "./MaintenanceForm.css";
 
 export default function MaintenanceForm() {
   const navigate = useNavigate();
   
-  // Default empty object - can be passed from parent in future
-  const preFilledData = {};
-  
-  const equipmentList = [
-    { id: "EQ-001", name: "CNC Machine", team: "Mechanical", tech: "Ravi Sharma" },
-    { id: "EQ-002", name: "Air Conditioner", team: "Electrical", tech: "Amit Verma" },
-    { id: "EQ-003", name: "Server Rack", team: "IT", tech: "Suresh Patel" },
-    { id: "EQ-004", name: "Hydraulic Press", team: "Mechanical", tech: "Ravi Sharma" },
-  ];
+  // Data State
+  const [equipmentList, setEquipmentList] = useState([]);
+  const [technicianList, setTechnicianList] = useState([]);
+  const [loadingData, setLoadingData] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
 
   const [form, setForm] = useState({
     title: "",
-    equipment: preFilledData.equipmentId || "",
-    equipmentName: preFilledData.equipmentName || "",
+    equipment: "",     
+    equipmentName: "", 
     category: "",
-    team: preFilledData.teamName || "",
-    teamId: preFilledData.teamId || "",
-    technician: preFilledData.technicianName || "",
-    technicianId: preFilledData.technicianId || "",
-    type: "",
+    type: "", // Ensure this field is handled if needed
     priority: "",
     date: "",
-    duration: "",
     description: "",
-    stage: "New" // Default stage
+    technician: "", 
+    stage: "New" 
   });
 
-  const [loading, setLoading] = useState(false);
-  const [autoFilled, setAutoFilled] = useState(false);
-
-  // Auto-fill on mount if data was passed
+  // 1. Fetch Real Data (Equipment AND Technicians)
   useEffect(() => {
-    if (preFilledData.equipmentId) {
-      const equipment = equipmentList.find(eq => eq.id === preFilledData.equipmentId);
-      if (equipment) {
-        setForm(prev => ({
-          ...prev,
-          category: equipment.category
-        }));
-        setAutoFilled(true);
-      }
-    }
+    fetchData();
   }, []);
+
+  async function fetchData() {
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) { navigate("/login"); return; }
+      const config = { headers: { Authorization: `Bearer ${token}` } };
+      
+      // Run both fetches at the same time
+      const [eqRes, techRes] = await Promise.all([
+        axios.get("http://localhost:5000/api/equipment", config),
+        axios.get("http://localhost:5000/api/teams/technicians", config) 
+      ]);
+
+      setEquipmentList(eqRes.data);
+      setTechnicianList(techRes.data);
+    } catch (error) {
+      console.error("Error loading data:", error);
+      // Ideally show a user-friendly error message here
+    } finally {
+      setLoadingData(false);
+    }
+  }
 
   function handleChange(e) {
     setForm({ ...form, [e.target.name]: e.target.value });
   }
 
   function handleEquipmentChange(e) {
-    const selected = equipmentList.find(eq => eq.id === e.target.value);
+    const selectedId = e.target.value;
+    const selected = equipmentList.find(eq => eq._id === selectedId);
+
     if (selected) {
       setForm({
         ...form,
-        equipment: selected.id,
-        team: selected.team,
-        technician: selected.tech,
+        equipment: selected._id,
+        equipmentName: selected.name,
+        category: selected.category || "General",
       });
     } else {
-      setForm({ ...form, equipment: "", team: "", technician: "" });
+      setForm({ ...form, equipment: "", equipmentName: "", category: "" });
     }
   }
 
   async function handleSubmit(e) {
     e.preventDefault();
-    setLoading(true);
+    setSubmitting(true);
 
     try {
-      // 1. 🔑 GET TOKEN (CRITICAL FIX)
       const token = localStorage.getItem("token");
+      const config = { headers: { Authorization: `Bearer ${token}` } };
 
-      // Safety check: If no token, force login
-      if (!token) {
-        alert("You are not logged in. Please log in again.");
-        navigate("/login");
-        return;
-      }
-
-      // 2. 📨 PREPARE HEADERS (ATTACH ID CARD)
-      const config = {
-        headers: {
-          Authorization: `Bearer ${token}` 
-        }
-      };
-
-      // Map priority to enum value: Low=0, Medium=1, High=2, Critical=3
       const priorityMap = { 'Low': '0', 'Medium': '1', 'High': '2', 'Critical': '3' };
       const stateMap = { 'New': 'draft', 'Assigned': 'assigned', 'In Progress': 'in_progress', 'Completed': 'completed' };
+      
+      // Map 'type' if you have a specific mapping, otherwise send as is
       
       const payload = {
         name: form.title,
         equipment_id: form.equipment,
-        equipmentName: form.equipmentName || '',
-        team_id: form.team,
-        technician_id: form.technician,
+        equipmentName: form.equipmentName,
         description: form.description,
         priority: priorityMap[form.priority] || '1',
         scheduled_date: form.date,
-        state: stateMap[form.stage] || 'draft'
+        state: form.technician ? 'assigned' : (stateMap[form.stage] || 'draft'), 
+        technician_id: form.technician 
       };
 
-      // 3. 🚀 SEND REQUEST WITH CONFIG
-      const response = await axios.post(
-        'http://localhost:5000/api/maintenance', 
-        payload, 
-        config // <--- This argument was missing before!
-      );
+      await axios.post('http://localhost:5000/api/maintenance', payload, config);
       
-      console.log("Maintenance Request Created:", response.data);
-      alert("✅ Maintenance request created successfully!");
-      setLoading(false);
-      
-      // Redirect to kanban - the board will fetch fresh data
+      alert("✅ Request Created Successfully!");
       navigate("/kanban");
     } catch (error) {
-      console.error("Error creating request:", error);
-      
-      // Handle 401 specifically
-      if (error.response && error.response.status === 401) {
-        alert("Session expired. Please login again.");
-        navigate("/login");
-      } else {
-        alert("❌ Error: " + (error.response?.data?.message || error.message));
-      }
-      setLoading(false);
+      alert("❌ Error: " + (error.response?.data?.message || "Failed to create request"));
+    } finally {
+      setSubmitting(false);
     }
   }
 
-  const isDisabled = !form.title || !form.equipment || !form.type || !form.priority;
-  const isPreventive = form.type === "Preventive";
+  const isDisabled = !form.title || !form.equipment || !form.priority;
 
   return (
     <div className="form-page-container">
-      
-      {/* HEADER with Back Button */}
-      <button 
-        onClick={() => navigate(-1)} 
-        style={{ 
-            background: 'none', 
-            border: 'none', 
-            color: '#64748b', 
-            cursor: 'pointer', 
-            marginBottom: '15px',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '5px',
-            fontSize: '14px'
-        }}
-      >
+      <button onClick={() => navigate(-1)} className="back-link-simple">
         <FiArrowLeft /> Cancel
       </button>
 
       <div className="form-header">
         <h1>Create Request</h1>
-        <p>Log a new maintenance task for equipment</p>
+        <p>Log a new maintenance task</p>
       </div>
 
-      {/* FORM CARD */}
       <form onSubmit={handleSubmit} className="form-card">
         
-        {/* SECTION 1: BASIC INFO */}
+        {/* BASIC INFO */}
         <div className="form-section">
-          <div className="section-title">
-            <FiInfo color="#2563eb" /> Basic Information
-          </div>
+          <div className="section-title"><FiInfo className="icon-blue" /> Basic Info</div>
           
-          <div className="form-row">
+          <div className="form-grid-2">
             <Input
-              label="Request Title"
+              label="Request Title *"
               name="title"
               value={form.title}
               onChange={handleChange}
-              placeholder="e.g. Motor overheating..."
+              placeholder="e.g. Broken Conveyor Belt"
               autoFocus
             />
             
-            <Select
-              label="Select Equipment"
-              onChange={handleEquipmentChange}
-              value={form.equipment}
-              options={equipmentList.map(eq => ({
-                value: eq.id,
-                label: `${eq.name} (${eq.id})`,
-              }))}
-            />
-          </div>
-
-          <div className="form-row">
-             <Input label="Assigned Team" value={form.team} disabled placeholder="Auto-filled" />
-             <Input label="Technician" value={form.technician} disabled placeholder="Auto-filled" />
+            <div className="input-group">
+              <label className="input-label">Select Equipment *</label>
+              <select 
+                className="modern-select"
+                onChange={handleEquipmentChange}
+                value={form.equipment}
+                disabled={loadingData}
+              >
+                <option value="">-- Select --</option>
+                {equipmentList.map(eq => (
+                  <option key={eq._id} value={eq._id}>{eq.name} ({eq.code})</option>
+                ))}
+              </select>
+            </div>
           </div>
         </div>
 
-        {/* SECTION 2: DETAILS */}
+        {/* DETAILS */}
         <div className="form-section">
-          <div className="section-title">
-            <FiTool color="#2563eb" /> Task Details
-          </div>
+          <div className="section-title"><FiTool className="icon-blue" /> Details & Assignment</div>
 
-          <div className="form-row three-col">
+          <div className="form-grid-3">
             <Select
-              label="Maintenance Type"
-              name="type"
-              value={form.type}
-              onChange={handleChange}
-              options={[
-                { value: "Corrective", label: "Corrective (Fix)" },
-                { value: "Preventive", label: "Preventive (Check)" },
-                { value: "Upgrade", label: "Upgrade" },
-              ]}
-              required
-            />
-
-            <Select
-              label="Priority Level"
+              label="Priority *"
               name="priority"
               value={form.priority}
               onChange={handleChange}
@@ -236,11 +178,30 @@ export default function MaintenanceForm() {
                 { value: "High", label: "High" },
                 { value: "Critical", label: "Critical" },
               ]}
-              required
             />
+            
+            {/* TECHNICIAN SELECT */}
+            <div className="input-group">
+              <label className="input-label">Assign Technician</label>
+              <div className="select-wrapper"> 
+                 {/* Optional: Add an icon inside the select wrapper via CSS if desired */}
+                  <select 
+                    className="modern-select"
+                    name="technician"
+                    value={form.technician}
+                    onChange={handleChange}
+                    disabled={loadingData}
+                  >
+                    <option value="">-- Unassigned --</option>
+                    {technicianList.map(tech => (
+                      <option key={tech._id} value={tech._id}>{tech.name} ({tech.role})</option>
+                    ))}
+                  </select>
+              </div>
+            </div>
 
             <Input
-              label="Scheduled Date"
+              label="Due Date"
               type="date"
               name="date"
               value={form.date}
@@ -249,80 +210,43 @@ export default function MaintenanceForm() {
           </div>
         </div>
 
-        {/* SECTION 3: DESCRIPTION */}
+        {/* DESCRIPTION */}
         <div className="form-section">
-          <div className="section-title">
-            <FiFileText color="#2563eb" /> Description
-          </div>
+          <div className="section-title"><FiFileText className="icon-blue" /> Description</div>
           <Textarea
-            label="Detailed Problem Description"
             name="description"
             value={form.description}
             onChange={handleChange}
-            placeholder="Describe the issue, noise, or error code observed..."
+            placeholder="Describe the problem..."
           />
         </div>
 
-        {/* FOOTER ACTIONS */}
-        <div style={{ display: "flex", justifyContent: "flex-end" }}>
-          <button
-            type="submit"
-            disabled={isDisabled || loading}
-            className="submit-btn"
-          >
-            {loading ? (
-              "Saving..."
-            ) : (
-              <> <FiSave /> Create Request </>
-            )}
+        <div className="form-actions">
+          <button type="submit" disabled={isDisabled || submitting} className="submit-btn">
+            {submitting ? "Saving..." : <><FiSave /> Create Request</>}
           </button>
         </div>
-
       </form>
     </div>
   );
 }
 
-/* ---------- REUSABLE INPUT COMPONENTS ---------- */
-
-function Input({ label, disabled, ...props }) {
-  return (
-    <div className="input-group">
-      <label className="input-label">{label}</label>
-      <input
-        {...props}
-        disabled={disabled}
-        className="modern-input"
-      />
-    </div>
-  );
-}
-
-function Select({ label, options, required, ...props }) {
-  return (
-    <div className="input-group">
-      <label className="input-label">{label}</label>
-      <select {...props} className="modern-select">
-        <option value="">-- Select --</option>
-        {options.map(o => (
-          <option key={o.value} value={o.value}>
-            {o.label}
-          </option>
-        ))}
-      </select>
-    </div>
-  );
-}
-
-function Textarea({ label, ...props }) {
-  return (
-    <div className="input-group">
-      <label className="input-label">{label}</label>
-      <textarea
-        {...props}
-        className="modern-textarea"
-        style={{ height: "100px", resize: "vertical" }}
-      />
-    </div>
-  );
-}
+// Reusable Components
+const Input = ({ label, ...props }) => (
+  <div className="input-group">
+    <label className="input-label">{label}</label>
+    <input {...props} className="modern-input" />
+  </div>
+);
+const Select = ({ label, options, ...props }) => (
+  <div className="input-group">
+    <label className="input-label">{label}</label>
+    <select {...props} className="modern-select">
+      <option value="">-- Select --</option>
+      {options.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+    </select>
+  </div>
+);
+const Textarea = ({ ...props }) => (
+  <textarea {...props} className="modern-textarea" style={{minHeight: "100px"}} />
+);

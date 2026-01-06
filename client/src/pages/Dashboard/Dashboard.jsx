@@ -1,7 +1,15 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
-import { FiTool, FiAlertCircle, FiClock, FiTrash2, FiArrowRight, FiPlus } from "react-icons/fi";
+import { 
+  FiTool, 
+  FiAlertCircle, 
+  FiClock, 
+  FiTrash2, 
+  FiArrowRight, 
+  FiPlus, 
+  FiCalendar 
+} from "react-icons/fi";
 import ProfileDropdown from "../../components/ProfileDropdown"; 
 import "./Dashboard.css";
 
@@ -14,7 +22,6 @@ export default function Dashboard() {
   const [user, setUser] = useState({ name: "" });
 
   useEffect(() => {
-    // 1. Check Login on Load
     const token = localStorage.getItem("token");
     const storedUser = localStorage.getItem("user");
 
@@ -26,37 +33,27 @@ export default function Dashboard() {
     if (storedUser) setUser(JSON.parse(storedUser));
 
     fetchDashboardData();
-    
-    // Auto-refresh every 30 seconds
     const interval = setInterval(fetchDashboardData, 30000);
     return () => clearInterval(interval);
   }, [navigate]);
 
   async function fetchDashboardData() {
     try {
-      // 🔴 FIX: WE MUST DEFINE TOKEN HERE BEFORE USING IT
       const token = localStorage.getItem("token"); 
+      if (!token) return; 
 
-      if (!token) return; // Safety check
-
-      const config = {
-        headers: { Authorization: `Bearer ${token}` } // Now 'token' exists!
-      };
-
-      // Don't trigger loading spinner on background refreshes to avoid flickering
-      // setLoading(true); 
-
-      const response = await axios.get('http://localhost:5000/api/maintenance', config);
+      const config = { headers: { Authorization: `Bearer ${token}` } };
       
-      // 🛡️ CRASH PREVENTION: Ensure data is an array
-      if (!Array.isArray(response.data)) {
-        console.error("API returned invalid format:", response.data);
-        return;
-      }
-
-      const requests = response.data;
+      // 1. Run BOTH requests in parallel for speed
+      const [reqResponse, eqResponse] = await Promise.all([
+        axios.get('http://localhost:5000/api/maintenance', config),
+        axios.get('http://localhost:5000/api/equipment', config) // <--- FETCH EQUIPMENT HERE
+      ]);
       
-      // Calculate Stats
+      const requests = reqResponse.data || [];
+      const equipmentList = eqResponse.data || [];
+
+      // Calculate Request Stats
       const open = requests.filter(r => r.state === 'draft' || r.state === 'assigned').length;
       const inProgress = requests.filter(r => r.state === 'in_progress').length;
       const scrapped = requests.filter(r => r.state === 'cancelled').length;
@@ -69,19 +66,20 @@ export default function Dashboard() {
       }).length;
       
       setStats({
-        equipment: 18, 
+        equipment: equipmentList.length, // <--- USE REAL COUNT HERE
         open: open + inProgress,
         overdue: overdue,
         scrapped: scrapped,
       });
       
-      // Get Recent 3
+      // Get Recent 5
       const recentRequests = requests
         .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
-        .slice(0, 3)
+        .slice(0, 5)
         .map(r => ({
           id: r._id || "Unknown",
           title: r.name || "Untitled Request",
+          date: r.scheduled_date ? new Date(r.scheduled_date).toLocaleDateString() : "No Date",
           status: r.state === 'draft' ? 'Open' : r.state === 'in_progress' ? 'In Progress' : r.state === 'completed' ? 'Done' : 'Cancelled',
           priority: r.priority === '0' ? 'Low' : r.priority === '1' ? 'Medium' : r.priority === '2' ? 'High' : 'Critical'
         }));
@@ -91,8 +89,6 @@ export default function Dashboard() {
 
     } catch (error) {
       console.error("Error fetching dashboard data:", error);
-      
-      // Only logout if unauthorized (token invalid)
       if (error.response && error.response.status === 401) {
         localStorage.removeItem("token");
         navigate("/login");
@@ -106,38 +102,74 @@ export default function Dashboard() {
       <div className="dashboard-container">
         
         {/* HEADER */}
-        <div className="dashboard-header" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "30px" }}>
-          <div className="dashboard-title">
-            <h1 style={{ margin: 0, fontSize: "24px" }}>Dashboard</h1>
-            <p style={{ margin: "5px 0 0 0", color: "#64748b" }}>
-              Welcome back, <span style={{ color: "#3b82f6", fontWeight: "600" }}>{user.name || "Admin"}</span>
+        <div className="dashboard-header">
+          <div className="header-left">
+            <h1>Dashboard</h1>
+            <p>
+              Welcome back, <span className="user-highlight">{user.name || "Admin"}</span>
             </p>
           </div>
 
-          <div style={{ display: "flex", alignItems: "center", gap: "15px" }}>
+          <div className="header-right">
             <button
               onClick={() => navigate("/maintenance/new")}
-              className="primary-btn"
-              style={{ height: "42px" }}
+              className="primary-btn pulse-effect"
             >
-              <FiPlus size={18} /> Create Request
+              <FiPlus size={18} /> New Request
             </button>
             <ProfileDropdown />
           </div>
         </div>
 
-        {/* STATS */}
+        {/* STATS GRID */}
         <div className="stats-grid">
-          <ModernStatCard title="Total Equipment" value={stats.equipment} color="#3b82f6" icon={<FiTool size={22} />} onClick={() => navigate("/equipment")} />
-          <ModernStatCard title="Open Requests" value={stats.open} color="#f59e0b" icon={<FiAlertCircle size={22} />} onClick={() => navigate("/kanban")} />
-          <ModernStatCard title="Overdue" value={stats.overdue} color="#ef4444" icon={<FiClock size={22} />} onClick={() => navigate("/kanban")} />
-          <ModernStatCard title="Scrapped" value={stats.scrapped} color="#64748b" icon={<FiTrash2 size={22} />} onClick={() => navigate("/equipment")} />
+          {loading ? (
+            <>
+              <SkeletonCard />
+              <SkeletonCard />
+              <SkeletonCard />
+              <SkeletonCard />
+            </>
+          ) : (
+            <>
+              <ModernStatCard 
+                title="Total Equipment" 
+                value={stats.equipment} 
+                color="blue" 
+                icon={<FiTool size={22} />} 
+                onClick={() => navigate("/equipment")} 
+              />
+              <ModernStatCard 
+                title="Active Requests" 
+                value={stats.open} 
+                color="orange" 
+                icon={<FiAlertCircle size={22} />} 
+                onClick={() => navigate("/kanban")} 
+              />
+              <ModernStatCard 
+                title="Overdue Tasks" 
+                value={stats.overdue} 
+                color="red" 
+                icon={<FiClock size={22} />} 
+                onClick={() => navigate("/kanban")} 
+              />
+              <ModernStatCard 
+                title="Scrapped Assets" 
+                value={stats.scrapped} 
+                color="gray" 
+                icon={<FiTrash2 size={22} />} 
+                onClick={() => navigate("/equipment")} 
+              />
+            </>
+          )}
         </div>
 
-        {/* RECENT LIST */}
+        {/* RECENT MAINTENANCE */}
         <div className="section-header">
-          <h3>Recent Maintenance</h3>
-          <span onClick={() => navigate("/kanban")} className="view-all-link">View all <FiArrowRight size={16} /></span>
+          <h3>Recent Activity</h3>
+          <span onClick={() => navigate("/kanban")} className="view-all-link">
+            View Board <FiArrowRight size={16} />
+          </span>
         </div>
 
         <div className="table-wrapper">
@@ -145,20 +177,38 @@ export default function Dashboard() {
             <table className="modern-table">
               <thead>
                 <tr>
-                  <th>ID</th>
-                  <th>Title</th>
+                  <th>Request ID</th>
+                  <th>Task Title</th>
+                  <th>Due Date</th>
                   <th>Status</th>
                   <th>Priority</th>
                 </tr>
               </thead>
               <tbody>
-                {recent.length === 0 ? (
-                  <tr><td colSpan="4" style={{ textAlign: "center", padding: "30px", color: "#94a3b8" }}>{loading ? "Loading..." : "No maintenance requests yet"}</td></tr>
+                {loading ? (
+                  // Skeleton Rows for Table
+                  [1, 2, 3].map((n) => (
+                    <tr key={n}>
+                      <td colSpan="5"><div className="skeleton-row"></div></td>
+                    </tr>
+                  ))
+                ) : recent.length === 0 ? (
+                  <tr>
+                    <td colSpan="5" className="empty-table-state">
+                      <div className="empty-icon-bg"><FiTool /></div>
+                      <p>No maintenance requests found.</p>
+                      <button className="text-btn" onClick={() => navigate("/maintenance/new")}>Create one now</button>
+                    </td>
+                  </tr>
                 ) : (
                   recent.map((r) => (
-                    <tr key={r.id}>
-                      <td style={{ fontWeight: "600", color: "#64748b" }}>#{r.id.substring(r.id.length - 6)}</td>
-                      <td style={{ fontWeight: "500" }}>{r.title}</td>
+                    <tr key={r.id} onClick={() => navigate("/kanban")} className="clickable-row">
+                      <td className="id-cell">#{r.id.substring(r.id.length - 6)}</td>
+                      <td className="title-cell">{r.title}</td>
+                      <td className="date-cell">
+                        <FiCalendar size={14} style={{ marginRight: 6, opacity: 0.5 }}/>
+                        {r.date}
+                      </td>
                       <td><StatusBadge status={r.status} /></td>
                       <td><PriorityBadge value={r.priority} /></td>
                     </tr>
@@ -173,20 +223,43 @@ export default function Dashboard() {
   );
 }
 
-// ... Internal Components ...
+/* ---------- INTERNAL COMPONENTS ---------- */
+
 function ModernStatCard({ title, value, color, icon, onClick }) {
+  // Map color names to specific CSS classes or hex codes
+  const colorMap = {
+    blue:   { bg: "linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%)", text: "#1d4ed8", iconBg: "#2563eb" },
+    orange: { bg: "linear-gradient(135deg, #fff7ed 0%, #ffedd5 100%)", text: "#c2410c", iconBg: "#f97316" },
+    red:    { bg: "linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%)", text: "#b91c1c", iconBg: "#ef4444" },
+    gray:   { bg: "linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)", text: "#334155", iconBg: "#64748b" },
+  };
+
+  const theme = colorMap[color] || colorMap.blue;
+
   return (
     <div className="stat-card" onClick={onClick}>
-      <div className="stat-header">
-        <div className="stat-text-container">
-          <p className="stat-title">{title}</p>
-          <h2 className="stat-value">{value}</h2>
-        </div>
-        <div className="stat-icon-bg" style={{ backgroundColor: color }}>
-          <span className="stat-icon-wrapper">{icon}</span>
-        </div>
+      <div className="stat-icon-container" style={{ backgroundColor: theme.iconBg }}>
+        {icon}
       </div>
-      <div className="stat-footer">Tap to view details</div>
+      <div className="stat-content">
+        <p className="stat-title">{title}</p>
+        <h2 className="stat-value" style={{ color: theme.text }}>{value}</h2>
+      </div>
+      <div className="stat-arrow">
+        <FiArrowRight />
+      </div>
+    </div>
+  );
+}
+
+function SkeletonCard() {
+  return (
+    <div className="stat-card skeleton-card">
+      <div className="skeleton-circle"></div>
+      <div className="skeleton-lines">
+        <div className="skeleton-line short"></div>
+        <div className="skeleton-line long"></div>
+      </div>
     </div>
   );
 }
@@ -200,7 +273,7 @@ function PriorityBadge({ value }) {
   };
   const style = map[value] || map.Low;
   return (
-    <span style={{ background: style.bg, color: style.text, padding: "4px 12px", borderRadius: "20px", fontSize: "12px", fontWeight: "600", display: "inline-flex", alignItems: "center", gap: "6px" }}>
+    <span style={{ background: style.bg, color: style.text, padding: "4px 10px", borderRadius: "12px", fontSize: "11px", fontWeight: "700", display: "inline-flex", alignItems: "center", gap: "6px", textTransform: "uppercase", letterSpacing: "0.5px" }}>
       <span style={{ width: "6px", height: "6px", borderRadius: "50%", background: style.dot }}></span>{value}
     </span>
   );
@@ -209,7 +282,15 @@ function PriorityBadge({ value }) {
 function StatusBadge({ status }) {
   const isDone = status === "Done";
   return (
-    <span style={{ color: isDone ? "#166534" : "#334155", background: isDone ? "#f0fdf4" : "#f1f5f9", padding: "4px 8px", borderRadius: "4px", fontSize: "13px", fontWeight: "500" }}>
+    <span style={{ 
+      color: isDone ? "#166534" : "#475569", 
+      background: isDone ? "#f0fdf4" : "#f1f5f9",
+      padding: "4px 10px",
+      borderRadius: "6px",
+      fontSize: "12px",
+      fontWeight: "600",
+      border: `1px solid ${isDone ? "#bbf7d0" : "#e2e8f0"}`
+    }}>
       {status}
     </span>
   );

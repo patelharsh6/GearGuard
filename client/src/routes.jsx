@@ -136,8 +136,8 @@ export default function AppRoutes() {
 
 
       {/* Teams Management */}
-      <Route path="/teams" element={<ProtectedRoute><TeamList /></ProtectedRoute>} />
       <Route path="/teams/new" element={<ProtectedRoute><TeamForm /></ProtectedRoute>} />
+      <Route path="/teams" element={<ProtectedRoute><TeamList /></ProtectedRoute>} />
       <Route path="/teams/:id" element={<ProtectedRoute><TeamDetails /></ProtectedRoute>} />
 
       {/* Reports & Analytics */}

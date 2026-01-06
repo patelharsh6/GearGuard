@@ -7,6 +7,7 @@ import maintenanceRoutes from "./routes/maintenance.routes.js";
 import dashboardRoutes from "./routes/dashboard.routes.js"; // 
 import equipmentRoutes from "./routes/equipment.routes.js";
 import Equipment from "./models/Equipment.model.js";
+import teamRoutes from "./routes/team.routes.js";
 
 dotenv.config();
 
@@ -46,6 +47,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/maintenance", maintenanceRoutes);
 app.use("/api/dashboard", dashboardRoutes);
 app.use("/api/equipment", equipmentRoutes);
+app.use("/api/teams", teamRoutes);
 
 // Test Route
 app.get("/", (req, res) => {

@@ -1,180 +1,140 @@
 .kanban-container {
-  padding: 30px;
-  background-color: #f8fafc;
-  min-height: 100vh;
-  font-family: 'Inter', sans-serif;
+  padding: 24px;
+  height: calc(100vh - 80px); /* Adjust based on your header height */
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  overflow: hidden; /* Prevents double scrollbars */
 }
 
+/* Header Section */
 .kanban-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 30px;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+  gap: 16px;
 }
 
 .kanban-header h1 {
   font-size: 24px;
-  margin: 0 0 5px 0;
+  font-weight: 700;
   color: #0f172a;
+  margin: 0;
 }
 
 .kanban-header p {
   color: #64748b;
-  margin: 0;
+  margin: 4px 0 0 0;
   font-size: 14px;
 }
 
+/* Filter Button */
 .filter-toggle-btn {
-  background: white;
-  border: 1px solid #e2e8f0;
-  padding: 8px 16px;
-  border-radius: 6px;
-  cursor: pointer;
   display: flex;
   align-items: center;
   gap: 8px;
+  background: white;
+  border: 1px solid #e2e8f0;
+  padding: 8px 16px;
+  border-radius: 8px;
   font-weight: 500;
   color: #475569;
-}
-
-/* Filter Panel */
-.filter-panel {
-  background: white;
-  padding: 16px;
-  border-radius: 8px;
-  border: 1px solid #e2e8f0;
-  margin-bottom: 20px;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-}
-
-.filter-header {
-  display: flex;
-  justify-content: space-between;
-  margin-bottom: 12px;
-}
-
-.filter-header h3 {
-  font-size: 14px;
-  margin: 0;
-  color: #334155;
-}
-
-.clear-filter-btn {
-  background: none;
-  border: none;
-  color: #ef4444;
   cursor: pointer;
-  font-size: 12px;
-  display: flex;
-  align-items: center;
-  gap: 4px;
+  transition: all 0.2s;
+}
+.filter-toggle-btn:hover {
+  border-color: #cbd5e1;
+  background: #f8fafc;
 }
 
-.filter-options {
-  display: flex;
-  gap: 10px;
-  flex-wrap: wrap;
-}
-
-.filter-chip {
-  padding: 6px 12px;
-  border-radius: 20px;
-  border: 1px solid #cbd5e1;
-  background: white;
-  cursor: pointer;
-  font-size: 13px;
-  color: #475569;
-}
-
-.filter-chip.active {
-  background: #eff6ff;
-  border-color: #3b82f6;
-  color: #1d4ed8;
-  font-weight: 600;
-}
-
-.active-filter-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  background: #f1f5f9;
-  padding: 6px 12px;
-  border-radius: 6px;
-  font-size: 13px;
-  color: #334155;
-  margin-bottom: 20px;
-}
-
-/* Board Layout */
+/* --- THE BOARD LAYOUT (Desktop) --- */
 .kanban-board {
   display: flex;
-  gap: 20px;
-  overflow-x: auto;
-  padding-bottom: 20px;
-  align-items: flex-start;
+  gap: 24px;
+  height: 100%;
+  overflow-x: auto; /* Allow horizontal scroll if screen is too narrow */
+  overflow-y: hidden;
+  padding-bottom: 20px; /* Space for scrollbar */
+  align-items: flex-start; /* Aligns columns to top */
 }
 
+/* --- COLUMNS --- */
 .kanban-column {
-  flex: 1;
-  min-width: 280px;
   background: #f1f5f9;
   border-radius: 12px;
-  padding: 12px;
+  width: 320px; /* Fixed width for desktop */
+  min-width: 320px; /* Prevents shrinking */
   display: flex;
   flex-direction: column;
+  max-height: 100%; /* Important for internal scrolling */
 }
 
 .column-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 12px;
-  padding: 0 4px;
-}
-
-.column-title {
+  padding: 16px;
   font-weight: 600;
   color: #334155;
   display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #e2e8f0;
+  background: #f8fafc;
+  border-radius: 12px 12px 0 0;
+}
+
+.column-title {
+  display: flex;
   align-items: center;
   font-size: 14px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 .task-count {
   background: #e2e8f0;
   color: #64748b;
-  font-size: 12px;
   padding: 2px 8px;
-  border-radius: 10px;
+  border-radius: 12px;
+  font-size: 12px;
   font-weight: 600;
 }
 
+/* Scrollable Area INSIDE Column */
 .column-content {
+  padding: 16px;
+  flex: 1;
+  overflow-y: auto; /* Vertical scroll for many tasks */
   display: flex;
   flex-direction: column;
   gap: 12px;
   min-height: 100px;
 }
 
-/* Card Styling */
+/* --- CARDS --- */
 .kanban-card {
   background: white;
   padding: 16px;
   border-radius: 8px;
-  box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+  border: 1px solid transparent;
+  transition: all 0.2s;
   cursor: grab;
   position: relative;
-  touch-action: none; /* Required for touch dragging */
+  touch-action: none; /* Critical for mobile dragging */
 }
 
-.kanban-card:active {
-  cursor: grabbing;
+.kanban-card:hover {
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  transform: translateY(-2px);
 }
 
 .dragging-card {
   opacity: 0.9;
-  transform: rotate(2deg);
-  box-shadow: 0 10px 20px rgba(0,0,0,0.15);
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.2);
+  transform: scale(1.05);
+  border: 2px solid #3b82f6;
+  z-index: 1000;
   cursor: grabbing;
 }
 
@@ -182,37 +142,147 @@
   font-weight: 600;
   color: #1e293b;
   font-size: 14px;
-  margin-right: 8px;
+  margin-bottom: 4px;
 }
 
 .card-meta {
   display: flex;
   justify-content: space-between;
+  align-items: center;
   margin-top: 12px;
-  padding-top: 12px;
-  border-top: 1px solid #f1f5f9;
   font-size: 12px;
   color: #94a3b8;
 }
 
+/* Empty State */
+.empty-placeholder {
+  text-align: center;
+  color: #94a3b8;
+  font-size: 13px;
+  border: 2px dashed #e2e8f0;
+  border-radius: 8px;
+  padding: 20px;
+  background: white;
+}
+
+/* Overdue Strip */
 .overdue-strip {
-  background-color: #fef2f2;
+  background: #fef2f2;
   color: #b91c1c;
   font-size: 10px;
   font-weight: 700;
   padding: 4px 8px;
   border-radius: 4px;
-  margin-bottom: 8px;
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 6px;
+  margin-bottom: 8px;
 }
 
-.empty-placeholder {
-  border: 2px dashed #cbd5e1;
-  border-radius: 8px;
-  padding: 20px;
-  text-align: center;
-  color: #94a3b8;
-  font-size: 13px;
+/* =========================================
+   📱 MOBILE RESPONSIVENESS (The Fix)
+   ========================================= */
+@media (max-width: 1024px) {
+  .kanban-container {
+    height: auto; /* Remove fixed height on mobile */
+    min-height: 100vh;
+    padding: 16px;
+    overflow-y: auto; /* Allow page scrolling */
+  }
+
+  /* Stack columns vertically */
+  .kanban-board {
+    flex-direction: column; 
+    overflow-x: hidden;
+    height: auto;
+    gap: 20px;
+  }
+
+  /* Columns take full width */
+  .kanban-column {
+    width: 100%;
+    min-width: 100%;
+    max-height: none; /* Let them grow */
+  }
+
+  /* Limit height of lists inside columns so page isn't endless */
+  .column-content {
+    max-height: 400px; 
+    min-height: 100px;
+  }
 }
+
+/* ... existing css ... */
+
+.card-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  position: relative; /* Important for dropdown positioning */
+}
+
+.menu-container {
+  position: relative;
+}
+
+.menu-btn {
+  border: none;
+  background: transparent;
+  color: #94a3b8;
+  padding: 4px;
+  border-radius: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+}
+.menu-btn:hover { background: #f1f5f9; color: #334155; }
+
+/* The Dropdown Menu */
+.card-dropdown {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  width: 140px;
+  background: white;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+  border-radius: 8px;
+  padding: 4px;
+  z-index: 50; /* Ensure it floats above other cards */
+  animation: fadeIn 0.1s ease-out;
+}
+
+@keyframes fadeIn { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
+
+.dropdown-label {
+  font-size: 10px;
+  color: #94a3b8;
+  padding: 4px 8px;
+  text-transform: uppercase;
+  font-weight: 600;
+}
+
+.card-dropdown button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 8px;
+  border: none;
+  background: none;
+  text-align: left;
+  font-size: 13px;
+  color: #334155;
+  cursor: pointer;
+  border-radius: 4px;
+}
+
+.card-dropdown button:hover { background: #f8fafc; }
+.card-dropdown button.danger:hover { background: #fef2f2; color: #b91c1c; }
+
+.divider { height: 1px; background: #f1f5f9; margin: 4px 0; }
+
+.dot { width: 8px; height: 8px; border-radius: 50%; }
+.dot.blue { background: #3b82f6; }
+.dot.orange { background: #f59e0b; }
+.dot.green { background: #22c55e; }

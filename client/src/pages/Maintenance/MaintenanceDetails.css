@@ -204,6 +204,80 @@
   color: #94a3b8;
 }
 
+.details-page {
+  padding: 30px;
+  background: #f8fafc;
+  min-height: 100vh;
+  font-family: 'Inter', sans-serif;
+}
+
+.details-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.back-btn {
+  background: white; border: 1px solid #e2e8f0; padding: 8px 16px;
+  border-radius: 8px; cursor: pointer; display: flex; align-items: center; gap: 8px;
+  color: #64748b; font-weight: 500; transition: all 0.2s;
+}
+.back-btn:hover { border-color: #cbd5e1; color: #0f172a; }
+
+.details-grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 24px;
+}
+@media (max-width: 900px) { .details-grid { grid-template-columns: 1fr; } }
+
+/* Cards */
+.info-card, .sidebar-card {
+  background: white; border: 1px solid #e2e8f0; border-radius: 12px;
+  padding: 24px; margin-bottom: 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+}
+
+/* Header Card */
+.header-card h1 { margin: 0; font-size: 24px; color: #0f172a; }
+.req-id { color: #94a3b8; font-size: 13px; margin: 4px 0 16px; font-family: monospace; }
+
+.priority-banner {
+  display: flex; align-items: center; gap: 10px;
+  padding-top: 16px; border-top: 1px solid #f1f5f9;
+}
+.prio-tag {
+  padding: 4px 10px; border-radius: 6px; font-weight: 600; font-size: 12px; text-transform: uppercase;
+}
+.p-3 { background: #fef2f2; color: #b91c1c; } /* Critical */
+.p-2 { background: #fff7ed; color: #c2410c; } /* High */
+.p-1 { background: #fefce8; color: #854d0e; } /* Medium */
+.p-0 { background: #f0fdf4; color: #15803d; } /* Low */
+
+/* Sidebar */
+.sidebar-card h3 {
+  margin: 0 0 16px; font-size: 14px; color: #64748b;
+  display: flex; align-items: center; gap: 8px; text-transform: uppercase; letter-spacing: 0.5px;
+}
+
+.eq-info {
+  display: flex; flex-direction: column; cursor: pointer;
+  padding: 10px; background: #f8fafc; border-radius: 8px; transition: background 0.2s;
+}
+.eq-info:hover { background: #f1f5f9; }
+
+.tech-info { display: flex; align-items: center; gap: 12px; }
+.avatar {
+  width: 40px; height: 40px; background: #3b82f6; color: white;
+  border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 600;
+}
+
+.sub-text { font-size: 13px; color: #64748b; display: block; }
+.date-row { display: flex; justify-content: space-between; font-size: 14px; margin-bottom: 8px; color: #334155; }
+.date-row .label { color: #64748b; }
+
+.loading-screen, .error-screen { text-align: center; padding: 50px; color: #94a3b8; }
+
 /* Responsive */
 @media (max-width: 768px) {
   .header-row {

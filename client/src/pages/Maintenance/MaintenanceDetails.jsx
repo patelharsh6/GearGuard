@@ -1,157 +1,146 @@
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import axios from "axios";
 import { 
-  FiArrowLeft, 
-  FiAlertTriangle, 
-  FiCheckCircle, 
-  FiClock, 
-  FiFileText, 
-  FiActivity 
+  FiArrowLeft, FiCalendar, FiUser, FiTool, FiAlertCircle, FiCheckCircle, FiClock 
 } from "react-icons/fi";
-import "./MaintenanceDetails.css";
+import "./MaintenanceDetails.css"; // We will create this next
 
 export default function MaintenanceDetails() {
+  const { id } = useParams();
   const navigate = useNavigate();
+  const [request, setRequest] = useState(null);
+  const [loading, setLoading] = useState(true);
 
-  const request = {
-    id: "MR-101",
-    title: "Motor Repair - Conveyor",
-    equipment: "CNC Machine (EQ-001)",
-    technician: "Ravi Sharma",
-    priority: "High",
-    status: "In Progress",
-    dueDate: "2024-12-10", // Set to past date to show Overdue logic
-    description: "Motor makes loud grinding noise during startup sequence. Needs coil inspection and bearing replacement."
-  };
+  useEffect(() => {
+    fetchDetails();
+  }, [id]);
 
-  const timeline = [
-    { text: "Request Created", date: "10 Dec 2025", active: true },
-    { text: "Assigned to Ravi", date: "11 Dec 2025", active: true },
-    { text: "Work Started", date: "12 Dec 2025", active: true },
-    { text: "Parts Ordered", date: "13 Dec 2025", active: false },
-    { text: "Completion", date: "-", active: false },
-  ];
-
-  const isOverdue = new Date(request.dueDate) < new Date();
-
-  return (
-    <div className="maintenance-container">
+  async function fetchDetails() {
+    try {
+      const token = localStorage.getItem("token");
+      const config = { headers: { Authorization: `Bearer ${token}` } };
       
-      {/* 1. Navigation */}
-      <button onClick={() => navigate(-1)} className="back-nav">
-        <FiArrowLeft /> Back to List
-      </button>
+      const response = await axios.get(`http://localhost:5000/api/maintenance/${id}`, config);
+      setRequest(response.data);
+    } catch (error) {
+      console.error("Error fetching details:", error);
+    } finally {
+      setLoading(false);
+    }
+  }
 
-      {/* 2. Header & Actions */}
-      <div className="header-row">
-        <div className="request-title">
-          <h1>{request.title}</h1>
-          <div className="request-meta">
-            <span style={{ color: "#64748b", fontWeight: 500 }}>#{request.id}</span>
-            <PriorityBadge value={request.priority} />
-            <StatusBadge value={request.status} />
-          </div>
-        </div>
-
-        <div className="action-group">
-          <button className="btn btn-danger">Scrap Request</button>
-          <button className="btn btn-primary">
-            <FiCheckCircle /> Mark Done
-          </button>
-        </div>
-      </div>
-
-      {/* 3. Main Layout Grid */}
-      <div className="details-grid">
-        
-        {/* Left Column: Details */}
-        <div className="detail-column">
-          
-          {isOverdue && (
-            <div className="overdue-alert">
-              <FiAlertTriangle />
-              <span>This request is overdue by 2 days.</span>
-            </div>
-          )}
-
-          <div className="detail-card">
-            <div className="card-title">
-              <FiFileText color="#2563eb" /> Request Details
-            </div>
-            
-            <div className="info-fields">
-              <InfoItem label="Equipment" value={request.equipment} />
-              <InfoItem label="Technician" value={request.technician} />
-              <InfoItem label="Due Date" value={request.dueDate} />
-              <InfoItem label="Department" value="Mechanical" />
-            </div>
-
-            <div style={{ marginTop: "24px", paddingTop: "20px", borderTop: "1px solid #f1f5f9" }}>
-               <div className="field-label">Description</div>
-               <p style={{ color: "#334155", lineHeight: "1.6" }}>{request.description}</p>
-            </div>
-          </div>
-        </div>
-
-        {/* Right Column: Timeline */}
-        <div className="timeline-column">
-          <div className="detail-card">
-            <div className="card-title">
-              <FiActivity color="#2563eb" /> Activity Log
-            </div>
-            
-            <div className="timeline-container">
-              {timeline.map((t, i) => (
-                <div key={i} className={`timeline-item ${t.active ? 'active' : ''}`}>
-                  <div className="timeline-dot"></div>
-                  <div className="timeline-text">{t.text}</div>
-                  <div className="timeline-date">{t.date}</div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-
-      </div>
-    </div>
-  );
-}
-
-/* ---------- HELPER COMPONENTS ---------- */
-
-function InfoItem({ label, value }) {
-  return (
-    <div>
-      <div className="field-label">{label}</div>
-      <div className="field-value">{value}</div>
-    </div>
-  );
-}
-
-function PriorityBadge({ value }) {
-  const map = {
-    High: { bg: "#fee2e2", text: "#991b1b" },
-    Medium: { bg: "#fef3c7", text: "#92400e" },
-    Low: { bg: "#dcfce7", text: "#166534" },
-  };
-  const style = map[value];
-  return (
-    <span style={{ 
-      background: style.bg, color: style.text, 
-      padding: "4px 10px", borderRadius: "12px", fontSize: "12px", fontWeight: "600" 
-    }}>
-      {value}
-    </span>
-  );
-}
-
-function StatusBadge({ value }) {
+  // Helper for status badge
+  const getStatusBadge = (state) => {
+    const styles = {
+      draft: { bg: "#f1f5f9", color: "#475569", label: "Open / Draft" },
+      in_progress: { bg: "#fff7ed", color: "#c2410c", label: "In Progress" },
+      completed: { bg: "#f0fdf4", color: "#15803d", label: "Completed" },
+      cancelled: { bg: "#fef2f2", color: "#b91c1c", label: "Cancelled" }
+    };
+    const style = styles[state] || styles.draft;
+    
     return (
-        <span style={{ 
-            background: "#f1f5f9", color: "#475569", 
-            padding: "4px 10px", borderRadius: "12px", fontSize: "12px", fontWeight: "600",
-            border: "1px solid #e2e8f0"
-        }}>
-          {value}
-        </span>
-    )
+      <span style={{ 
+        background: style.bg, color: style.color, 
+        padding: "6px 12px", borderRadius: "20px", 
+        fontWeight: "600", fontSize: "13px", display: "inline-flex", alignItems: "center", gap: "6px"
+      }}>
+        <span style={{width: 8, height: 8, borderRadius: "50%", background: style.color}}></span>
+        {style.label}
+      </span>
+    );
+  };
+
+  if (loading) return <div className="loading-screen">Loading details...</div>;
+  if (!request) return <div className="error-screen">Request not found.</div>;
+
+  return (
+    <div className="details-page">
+      {/* Header */}
+      <div className="details-header">
+        <button onClick={() => navigate(-1)} className="back-btn">
+          <FiArrowLeft /> Back
+        </button>
+        <div className="header-actions">
+          {getStatusBadge(request.state)}
+        </div>
+      </div>
+
+      <div className="details-grid">
+        {/* LEFT COLUMN: Main Info */}
+        <div className="details-main">
+          <div className="info-card header-card">
+            <h1>{request.name}</h1>
+            <p className="req-id">ID: #{request._id}</p>
+            
+            <div className="priority-banner">
+              <span className="label">Priority:</span>
+              <span className={`prio-tag p-${request.priority}`}>
+                {request.priority === '3' ? 'Critical' : request.priority === '2' ? 'High' : request.priority === '1' ? 'Medium' : 'Low'}
+              </span>
+            </div>
+          </div>
+
+          <div className="info-card description-card">
+            <h3>Description</h3>
+            <p>{request.description || "No description provided."}</p>
+          </div>
+        </div>
+
+        {/* RIGHT COLUMN: Sidebar Info */}
+        <div className="details-sidebar">
+          
+          {/* Equipment Info */}
+          <div className="sidebar-card">
+            <h3><FiTool /> Equipment</h3>
+            {request.equipment ? (
+              <div className="eq-info" onClick={() => navigate(`/equipment/${request.equipment._id}`)}>
+                <strong>{request.equipment.name}</strong>
+                <span>{request.equipment.code}</span>
+                <span className="sub-text">{request.equipment.location}</span>
+              </div>
+            ) : (
+              <div className="eq-info">
+                <strong>{request.equipmentName}</strong>
+                <span className="sub-text">(Details unavailable)</span>
+              </div>
+            )}
+          </div>
+
+          {/* Technician Info */}
+          <div className="sidebar-card">
+            <h3><FiUser /> Assigned To</h3>
+            <div className="tech-info">
+              {request.technician_id ? (
+                <>
+                  <div className="avatar">{request.technician_id.name.charAt(0)}</div>
+                  <div>
+                    <strong>{request.technician_id.name}</strong>
+                    <span className="sub-text">{request.technician_id.email}</span>
+                  </div>
+                </>
+              ) : (
+                <span className="unassigned">Unassigned</span>
+              )}
+            </div>
+          </div>
+
+          {/* Dates */}
+          <div className="sidebar-card">
+            <h3><FiCalendar /> Schedule</h3>
+            <div className="date-row">
+              <span className="label">Scheduled:</span>
+              <span>{request.scheduled_date ? new Date(request.scheduled_date).toLocaleDateString() : "Not scheduled"}</span>
+            </div>
+            <div className="date-row">
+              <span className="label">Created:</span>
+              <span>{new Date(request.createdAt).toLocaleDateString()}</span>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  );
 }

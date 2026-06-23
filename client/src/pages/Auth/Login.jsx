@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { FiMail, FiLock, FiArrowRight, FiShield, FiAlertCircle } from "react-icons/fi";
 import axios from "axios";
-import "./Login.css";
+import "./Auth.css";
 
 export default function Login() {
   const navigate = useNavigate();

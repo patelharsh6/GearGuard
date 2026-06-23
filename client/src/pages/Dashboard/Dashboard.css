@@ -1,9 +1,7 @@
-/* Layout */
+/* Dashboard.css - Modernized */
 .dashboard-layout {
   min-height: 100vh;
-  background-color: #f8fafc; /* Slate-50 */
-  padding: 30px;
-  font-family: 'Inter', system-ui, sans-serif;
+  /* Removed padding and background here, because MainLayout handles it */
 }
 
 .dashboard-container {
@@ -21,20 +19,21 @@
 
 .dashboard-header h1 {
   margin: 0;
-  font-size: 28px;
-  color: #0f172a; /* Slate-900 */
+  font-size: 2rem;
+  color: var(--text-primary);
   letter-spacing: -0.5px;
+  font-weight: 800;
 }
 
 .dashboard-header p {
   margin: 4px 0 0 0;
-  color: #64748b;
-  font-size: 15px;
+  color: var(--text-secondary);
+  font-size: 1.1rem;
 }
 
 .user-highlight {
-  color: #2563eb;
-  font-weight: 600;
+  color: var(--primary);
+  font-weight: 700;
 }
 
 .header-right {
@@ -43,27 +42,28 @@
   gap: 16px;
 }
 
+/* Make sure primary-btn matches the global btn-primary style */
 .primary-btn {
-  background-color: #2563eb;
+  background-color: var(--primary);
   color: white;
   border: none;
   padding: 0 20px;
   height: 44px;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   font-weight: 600;
-  font-size: 14px;
+  font-size: 1rem;
   cursor: pointer;
   display: flex;
   align-items: center;
   gap: 8px;
-  transition: all 0.2s ease;
-  box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.2);
+  transition: var(--transition);
+  box-shadow: var(--shadow-sm);
 }
 
 .primary-btn:hover {
-  background-color: #1d4ed8;
+  background-color: var(--primary-hover);
   transform: translateY(-1px);
-  box-shadow: 0 6px 8px -1px rgba(37, 99, 235, 0.3);
+  box-shadow: var(--shadow-md);
 }
 
 /* Stats Grid */
@@ -75,36 +75,36 @@
 }
 
 .stat-card {
-  background: white;
-  border-radius: 16px;
+  background: var(--bg-surface);
+  border-radius: var(--radius-lg);
   padding: 24px;
   display: flex;
   align-items: center;
   gap: 20px;
   cursor: pointer;
-  transition: all 0.2s ease;
-  border: 1px solid #f1f5f9;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+  transition: var(--transition);
+  border: 1px solid var(--border-light);
+  box-shadow: var(--shadow-sm);
   position: relative;
   overflow: hidden;
 }
 
 .stat-card:hover {
   transform: translateY(-4px);
-  box-shadow: 0 12px 24px -6px rgba(0, 0, 0, 0.08);
-  border-color: #e2e8f0;
+  box-shadow: var(--shadow-md);
+  border-color: var(--border-focus);
 }
 
 .stat-icon-container {
   width: 50px;
   height: 50px;
-  border-radius: 12px;
+  border-radius: var(--radius-md);
   display: flex;
   align-items: center;
   justify-content: center;
   color: white;
   flex-shrink: 0;
-  box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+  box-shadow: var(--shadow-sm);
 }
 
 .stat-content {
@@ -113,31 +113,32 @@
 
 .stat-title {
   margin: 0;
-  font-size: 13px;
-  color: #64748b;
-  font-weight: 500;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.05em;
 }
 
 .stat-value {
   margin: 4px 0 0 0;
-  font-size: 28px;
-  font-weight: 700;
+  font-size: 2.5rem;
+  font-weight: 800;
   line-height: 1;
+  letter-spacing: -1px;
 }
 
 .stat-arrow {
-  color: #cbd5e1;
+  color: var(--border-focus);
   opacity: 0;
   transform: translateX(-10px);
-  transition: all 0.2s;
+  transition: var(--transition);
 }
 
 .stat-card:hover .stat-arrow {
   opacity: 1;
   transform: translateX(0);
-  color: #3b82f6;
+  color: var(--primary);
 }
 
 /* Section Header */
@@ -151,20 +152,20 @@
 
 .section-header h3 {
   margin: 0;
-  font-size: 18px;
-  color: #1e293b;
+  font-size: 1.25rem;
+  color: var(--text-primary);
   font-weight: 700;
 }
 
 .view-all-link {
-  font-size: 14px;
-  color: #3b82f6;
+  font-size: 0.95rem;
+  color: var(--primary);
   cursor: pointer;
   display: flex;
   align-items: center;
   gap: 6px;
-  font-weight: 500;
-  transition: gap 0.2s;
+  font-weight: 600;
+  transition: var(--transition);
 }
 
 .view-all-link:hover {
@@ -174,10 +175,10 @@
 
 /* Table */
 .table-wrapper {
-  background: white;
-  border-radius: 16px;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02);
-  border: 1px solid #f1f5f9;
+  background: var(--bg-surface);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border-light);
   overflow: hidden;
 }
 
@@ -192,20 +193,20 @@
 }
 
 .modern-table th {
-  background: #f8fafc;
+  background: var(--bg-primary);
   padding: 16px 24px;
-  font-size: 12px;
+  font-size: 0.85rem;
   font-weight: 600;
-  color: #64748b;
+  color: var(--text-secondary);
   text-transform: uppercase;
-  border-bottom: 1px solid #e2e8f0;
+  border-bottom: 1px solid var(--border-light);
 }
 
 .modern-table td {
   padding: 18px 24px;
-  border-bottom: 1px solid #f1f5f9;
-  font-size: 14px;
-  color: #334155;
+  border-bottom: 1px solid var(--border-light);
+  font-size: 0.95rem;
+  color: var(--text-primary);
   vertical-align: middle;
 }
 
@@ -219,24 +220,24 @@
 }
 
 .clickable-row:hover {
-  background-color: #f8fafc;
+  background-color: var(--bg-primary);
 }
 
 .id-cell {
   font-family: 'Monaco', 'Consolas', monospace;
-  color: #64748b !important;
-  font-size: 13px !important;
+  color: var(--text-secondary) !important;
+  font-size: 0.85rem !important;
 }
 
 .title-cell {
-  font-weight: 500;
-  color: #0f172a !important;
+  font-weight: 600;
+  color: var(--text-primary) !important;
 }
 
 .date-cell {
   display: flex;
   align-items: center;
-  color: #64748b !important;
+  color: var(--text-secondary) !important;
 }
 
 /* Empty State */
@@ -248,25 +249,25 @@
 .empty-icon-bg {
   width: 60px;
   height: 60px;
-  background: #f1f5f9;
+  background: var(--bg-primary);
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
   margin: 0 auto 15px;
-  color: #94a3b8;
+  color: var(--text-tertiary);
   font-size: 24px;
 }
 
 .empty-table-state p {
-  color: #64748b;
+  color: var(--text-secondary);
   margin: 0 0 10px;
 }
 
 .text-btn {
   background: none;
   border: none;
-  color: #2563eb;
+  color: var(--primary);
   font-weight: 600;
   cursor: pointer;
   padding: 0;
@@ -274,15 +275,15 @@
 
 /* Skeleton Loaders */
 .skeleton-card {
-  background: white;
-  border: 1px solid #f1f5f9;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-light);
 }
 
 .skeleton-circle {
   width: 50px;
   height: 50px;
-  border-radius: 12px;
-  background: #f1f5f9;
+  border-radius: var(--radius-md);
+  background: var(--border-light);
   animation: shimmer 1.5s infinite linear;
 }
 
@@ -295,7 +296,7 @@
 
 .skeleton-line {
   height: 12px;
-  background: #f1f5f9;
+  background: var(--border-light);
   border-radius: 4px;
   animation: shimmer 1.5s infinite linear;
 }
@@ -305,7 +306,7 @@
 
 .skeleton-row {
   height: 20px;
-  background: #f1f5f9;
+  background: var(--border-light);
   border-radius: 4px;
   animation: shimmer 1.5s infinite linear;
 }

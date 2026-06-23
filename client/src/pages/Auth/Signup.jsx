@@ -2,18 +2,17 @@ import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { FiUser, FiMail, FiLock, FiArrowRight, FiShield, FiAlertCircle, FiBriefcase } from "react-icons/fi";
 import axios from "axios";
-import "./Signup.css";
+import "./Auth.css";
 
 export default function Signup() {
   const navigate = useNavigate();
   
-  // 1. Added 'role' to state (default is empty or technician)
   const [formData, setFormData] = useState({
     name: "",
     email: "",
     password: "",
     confirmPassword: "",
-    role: "technician" // Default selection
+    role: "technician"
   });
   
   const [loading, setLoading] = useState(false);
@@ -36,7 +35,6 @@ export default function Signup() {
     setError("");
 
     try {
-      // 2. Sending 'role' to the backend now
       const response = await axios.post("http://localhost:5000/api/auth/signup", {
         name: formData.name, 
         email: formData.email,
@@ -51,7 +49,7 @@ export default function Signup() {
           role: response.data.role,
           email: response.data.email
         }));
-        navigate("/dashboard");
+        navigate("/");
       }
     } catch (err) {
       const errorMsg = err.response?.data?.message || "Registration failed. Try again.";
@@ -62,37 +60,38 @@ export default function Signup() {
   }
 
   return (
-    <div className="signup-page">
-      <div className="signup-container">
-        
-        {/* LEFT SIDE: BRANDING */}
-        <div className="signup-branding">
-          <div className="brand-title">
-            <FiShield size={28} /> GearGuard
-          </div>
-          <div className="brand-pitch">
-            <h2>Join the future of maintenance.</h2>
-            <p>Create your account to start tracking equipment, managing teams, and predicting downtime.</p>
-          </div>
-          <div style={{ fontSize: "12px", opacity: 0.7 }}>Trusted by 500+ Industry Leaders</div>
+    <div className="auth-page">
+      
+      {/* Left side: Branding */}
+      <div className="auth-branding">
+        <div className="brand-logo">
+          <FiShield size={32} /> GearGuard
         </div>
+        <div className="brand-content">
+          <h1>Join the Future of Maintenance.</h1>
+          <p>Create your account to start tracking equipment, managing teams, and predicting downtime with our premium toolkit.</p>
+        </div>
+        <div className="brand-footer">
+          Trusted by 500+ Industry Leaders globally.
+        </div>
+      </div>
 
-        {/* RIGHT SIDE: FORM */}
-        <div className="signup-form-section">
-          <div className="signup-header">
+      {/* Right side: Form */}
+      <div className="auth-form-container">
+        <div className="auth-form-wrapper">
+          <div className="auth-header">
             <h2>Create Account</h2>
             <p>Get started with your free account</p>
           </div>
 
           {error && (
-            <div style={{ backgroundColor: "#fee2e2", color: "#ef4444", padding: "10px", borderRadius: "10px", fontSize: "14px", marginBottom: "15px", display: "flex", alignItems: "center", gap: "8px" }}>
+            <div className="alert-error">
               <FiAlertCircle /> {error}
             </div>
           )}
 
-          <form onSubmit={handleSignup}>
+          <form className="auth-form" onSubmit={handleSignup}>
             
-            {/* Name */}
             <div className="input-group">
               <label className="input-label">Full Name</label>
               <div className="input-wrapper">
@@ -101,7 +100,6 @@ export default function Signup() {
               </div>
             </div>
 
-            {/* Email */}
             <div className="input-group">
               <label className="input-label">Email Address</label>
               <div className="input-wrapper">
@@ -110,7 +108,6 @@ export default function Signup() {
               </div>
             </div>
 
-            {/* 3. NEW INPUT: Role Selection */}
             <div className="input-group">
               <label className="input-label">Select Role</label>
               <div className="input-wrapper">
@@ -119,19 +116,17 @@ export default function Signup() {
                   className="modern-input" 
                   value={formData.role} 
                   onChange={handleChange}
-                  style={{ cursor: "pointer", appearance: "none" }} // 'appearance: none' hides default arrow to use ours if we wanted
+                  style={{ cursor: "pointer", appearance: "none" }}
                 >
                   <option value="technician">Technician</option>
                   <option value="manager">Manager</option>
                   <option value="admin">Admin</option>
                 </select>
                 <FiBriefcase className="input-icon" />
-                {/* Custom arrow indicator */}
-                <div style={{ position: "absolute", right: "15px", top: "50%", transform: "translateY(-50%)", pointerEvents: "none", color: "#94a3b8", fontSize: "12px" }}>▼</div>
+                <div style={{ position: "absolute", right: "15px", top: "50%", transform: "translateY(-50%)", pointerEvents: "none", color: "var(--text-tertiary)", fontSize: "12px" }}>▼</div>
               </div>
             </div>
 
-            {/* Password */}
             <div className="input-group">
               <label className="input-label">Password</label>
               <div className="input-wrapper">
@@ -140,7 +135,6 @@ export default function Signup() {
               </div>
             </div>
 
-            {/* Confirm Password */}
             <div className="input-group">
               <label className="input-label">Confirm Password</label>
               <div className="input-wrapper">
@@ -149,11 +143,11 @@ export default function Signup() {
               </div>
             </div>
 
-            <button className="signup-btn" disabled={loading}>
+            <button className="btn-primary auth-btn" disabled={loading}>
               {loading ? "Creating Account..." : (<>Create Account <FiArrowRight /></>)}
             </button>
 
-            <div className="signup-footer">
+            <div className="auth-footer">
               Already have an account? <Link to="/login">Log in</Link>
             </div>
 

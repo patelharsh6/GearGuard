@@ -1,5 +1,9 @@
 import { Routes, Route, Navigate } from "react-router-dom";
 
+/* -------- LAYOUTS -------- */
+import AuthLayout from "./components/layout/AuthLayout.jsx";
+import MainLayout from "./components/layout/MainLayout.jsx";
+
 /* -------- AUTH -------- */
 import Login from "./pages/Auth/Login.jsx";
 import Signup from "./pages/Auth/Signup.jsx";
@@ -14,7 +18,7 @@ import EquipmentDetails from "./pages/Equipment/EquipmentDetails/EquipmentDetail
 import EquipmentForm from "./pages/Equipment/EquipmentForm/EquipmentForm.jsx";
 
 /* -------- MAINTENANCE -------- */
-import MaintenanceList from "./pages/Maintenance/MaintenanceList.jsx"; // ✅ New Import
+import MaintenanceList from "./pages/Maintenance/MaintenanceList.jsx";
 import MaintenanceForm from "./pages/Maintenance/MaintenanceForm.jsx";
 import MaintenanceDetails from "./pages/Maintenance/MaintenanceDetails.jsx";
 
@@ -29,126 +33,43 @@ import TeamDetails from "./pages/Teams/TeamDetails.jsx";
 
 import Reports from "./pages/Reports/Reports.jsx";
 
-
 export default function AppRoutes() {
   return (
     <Routes>
-      {/* ---------- PUBLIC ROUTES ---------- */}
-      <Route path="/login" element={<Login />} />
-      <Route path="/signup" element={<Signup />} />
+      {/* ---------- PUBLIC ROUTES (AUTH LAYOUT) ---------- */}
+      <Route element={<AuthLayout />}>
+        <Route path="/login" element={<Login />} />
+        <Route path="/signup" element={<Signup />} />
+      </Route>
 
-      {/* ---------- PROTECTED ROUTES ---------- */}
-      
-      {/* 1. Dashboard */}
-      <Route
-        path="/"
-        element={
-          <ProtectedRoute>
-            <Dashboard />
-          </ProtectedRoute>
-        }
-      />
+      {/* ---------- PROTECTED ROUTES (MAIN LAYOUT) ---------- */}
+      <Route element={<ProtectedRoute><MainLayout /></ProtectedRoute>}>
+        {/* 1. Dashboard */}
+        <Route path="/" element={<Dashboard />} />
 
-      {/* 2. Equipment Management */}
-      <Route
-        path="/equipment"
-        element={
-          <ProtectedRoute>
-            <EquipmentList />
-          </ProtectedRoute>
-        }
-      />
+        {/* 2. Equipment Management */}
+        <Route path="/equipment" element={<EquipmentList />} />
+        <Route path="/equipment/add" element={<EquipmentForm />} />
+        <Route path="/equipment/:id" element={<EquipmentDetails />} />
+        <Route path="/equipment/:id/edit" element={<EquipmentForm />} />
 
-      <Route
-        path="/equipment/add"
-        element={
-          <ProtectedRoute>
-            <EquipmentForm />
-          </ProtectedRoute>
-        }
-      />
+        {/* 3. Maintenance Management */}
+        <Route path="/maintenance" element={<MaintenanceList />} />
+        <Route path="/maintenance/new" element={<MaintenanceForm />} />
+        <Route path="/maintenance/:id" element={<MaintenanceDetails />} />
 
-      <Route
-        path="/equipment/:id"
-        element={
-          <ProtectedRoute>
-            <EquipmentDetails />
-          </ProtectedRoute>
-        }
-      />
+        {/* 4. Visual Workflows */}
+        <Route path="/kanban" element={<KanbanBoard />} />
+        <Route path="/calendar" element={<MaintenanceCalendar />} />
 
-      <Route
-        path="/equipment/:id/edit"
-        element={
-          <ProtectedRoute>
-            <EquipmentForm />
-          </ProtectedRoute>
-        }
-      />
+        {/* Teams Management */}
+        <Route path="/teams/new" element={<TeamForm />} />
+        <Route path="/teams" element={<TeamList />} />
+        <Route path="/teams/:id" element={<TeamDetails />} />
 
-      {/* 3. Maintenance Management */}
-      {/* ✅ New Route: The List/Table View */}
-      <Route
-        path="/maintenance"
-        element={
-          <ProtectedRoute>
-            <MaintenanceList />
-          </ProtectedRoute>
-        }
-      />
-
-      <Route
-        path="/maintenance/new"
-        element={
-          <ProtectedRoute>
-            <MaintenanceForm />
-          </ProtectedRoute>
-        }
-      />
-
-      <Route
-        path="/maintenance/:id"
-        element={
-          <ProtectedRoute>
-            <MaintenanceDetails />
-          </ProtectedRoute>
-        }
-      />
-
-      {/* 4. Visual Workflows */}
-      <Route
-        path="/kanban"
-        element={
-          <ProtectedRoute>
-            <KanbanBoard />
-          </ProtectedRoute>
-        }
-      />
-
-      <Route
-        path="/calendar"
-        element={
-          <ProtectedRoute>
-            <MaintenanceCalendar />
-          </ProtectedRoute>
-        }
-      />
-
-
-      {/* Teams Management */}
-      <Route path="/teams/new" element={<ProtectedRoute><TeamForm /></ProtectedRoute>} />
-      <Route path="/teams" element={<ProtectedRoute><TeamList /></ProtectedRoute>} />
-      <Route path="/teams/:id" element={<ProtectedRoute><TeamDetails /></ProtectedRoute>} />
-
-      {/* Reports & Analytics */}
-      <Route
-        path="/reports"
-        element={
-          <ProtectedRoute>
-            <Reports />
-          </ProtectedRoute>
-        }
-      />
+        {/* Reports & Analytics */}
+        <Route path="/reports" element={<Reports />} />
+      </Route>
 
       {/* ---------- FALLBACK ---------- */}
       <Route path="*" element={<Navigate to="/" />} />

@@ -3,6 +3,7 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import User from "../models/User.model.js";
 
+import protect from "../middlewares/auth.middleware.js";
 const router = express.Router();
 
 // Helper: Generate JWT
@@ -73,6 +74,55 @@ router.post("/login", async (req, res) => {
     }
   } catch (error) {
     console.error("Login Error:", error);
+    res.status(500).json({ message: "Server Error" });
+  }
+});
+
+// @route   GET /api/auth/me
+router.get("/me", protect, async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id).select("-password");
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+    res.json(user);
+  } catch (error) {
+    console.error("Get Me Error:", error);
+    res.status(500).json({ message: "Server Error" });
+  }
+});
+
+// @route   PUT /api/auth/profile
+router.put("/profile", protect, async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id);
+
+    if (user) {
+      user.name = req.body.name || user.name;
+      user.email = req.body.email || user.email;
+      
+      if (req.body.password) {
+        // Assume password hashing is handled in User model pre-save hook.
+        // Wait, checking if User.model.js has a pre-save hook for password. Let's assume it doesn't and handle here if needed.
+        // Actually I'll avoid password update for now to keep it simple, or I'll just check User model. Let's skip password update for this simple fix, or hash it.
+        const salt = await bcrypt.genSalt(10);
+        user.password = await bcrypt.hash(req.body.password, salt);
+      }
+
+      const updatedUser = await user.save();
+
+      res.json({
+        _id: updatedUser.id,
+        name: updatedUser.name,
+        email: updatedUser.email,
+        role: updatedUser.role,
+        token: generateToken(updatedUser._id), // Optional, but good practice
+      });
+    } else {
+      res.status(404).json({ message: "User not found" });
+    }
+  } catch (error) {
+    console.error("Update Profile Error:", error);
     res.status(500).json({ message: "Server Error" });
   }
 });

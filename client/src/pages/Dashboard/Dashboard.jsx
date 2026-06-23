@@ -10,7 +10,6 @@ import {
   FiPlus, 
   FiCalendar 
 } from "react-icons/fi";
-import ProfileDropdown from "../../components/ProfileDropdown"; 
 import "./Dashboard.css";
 
 export default function Dashboard() {
@@ -117,7 +116,6 @@ export default function Dashboard() {
             >
               <FiPlus size={18} /> New Request
             </button>
-            <ProfileDropdown />
           </div>
         </div>
 

@@ -1,4 +1,5 @@
 import React from 'react';
+import ProfileDropdown from '../ProfileDropdown';
 import './Navbar.css';
 
 // Accept the 'onMenuClick' prop to trigger the sidebar
@@ -22,7 +23,9 @@ export default function Navbar({ onMenuClick }) {
         <h3 className="brand-name">GearGuard</h3>
       </div>
 
-      
+      <div className="navbar-actions">
+        <ProfileDropdown />
+      </div>
     </nav>
   );
 }

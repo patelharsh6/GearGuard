@@ -1,20 +1,41 @@
 import { useState, useRef, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { FiUser, FiLogOut, FiSettings, FiChevronDown } from "react-icons/fi";
-import "./ProfileDropdown.css"; // We will create this CSS next
+import axios from "axios";
+import "./ProfileDropdown.css";
 
 export default function ProfileDropdown() {
   const navigate = useNavigate();
-  const [user, setUser] = useState({ name: "Admin", role: "Manager" });
+  const [user, setUser] = useState({ name: "Loading...", role: "...", email: "" });
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef(null);
 
   // Load user data
   useEffect(() => {
-    const storedUser = localStorage.getItem("user");
-    if (storedUser) {
-      setUser(JSON.parse(storedUser));
-    }
+    const fetchProfile = async () => {
+      try {
+        // Fallback to local storage first
+        const storedUser = localStorage.getItem("user");
+        if (storedUser) setUser(JSON.parse(storedUser));
+
+        // Fetch fresh from DB
+        const token = localStorage.getItem("token");
+        if (token) {
+          const { data } = await axios.get("http://localhost:5000/api/auth/me", {
+            headers: { Authorization: `Bearer ${token}` }
+          });
+          setUser(data);
+          localStorage.setItem("user", JSON.stringify({
+            name: data.name,
+            role: data.role,
+            email: data.email
+          }));
+        }
+      } catch (error) {
+        console.error("Failed to fetch profile", error);
+      }
+    };
+    fetchProfile();
   }, []);
 
   // Close dropdown when clicking outside
@@ -45,7 +66,7 @@ export default function ProfileDropdown() {
         </div>
         <div className="user-info-text">
           <span className="user-name">{user.name}</span>
-          <span className="user-role">{user.role}</span>
+          <span className="user-role">{user.role || 'User'}</span>
         </div>
         <FiChevronDown className={`chevron-icon ${isOpen ? "open" : ""}`} />
       </div>
@@ -57,17 +78,17 @@ export default function ProfileDropdown() {
             <div className="menu-avatar">{getInitials(user.name)}</div>
             <div>
               <strong>{user.name}</strong>
-              <p>{user.email || "user@gearguard.com"}</p>
+              <p>{user.email}</p>
             </div>
           </div>
           
           <div className="menu-body">
-            <div className="menu-item">
+            <Link to="/profile" className="menu-item" onClick={() => setIsOpen(false)}>
               <FiUser /> My Profile
-            </div>
-            <div className="menu-item">
+            </Link>
+            <Link to="/settings" className="menu-item" onClick={() => setIsOpen(false)}>
               <FiSettings /> Settings
-            </div>
+            </Link>
           </div>
 
           <div className="menu-footer">

@@ -33,6 +33,10 @@ import TeamDetails from "./pages/Teams/TeamDetails.jsx";
 
 import Reports from "./pages/Reports/Reports.jsx";
 
+/* -------- USER -------- */
+import Profile from "./pages/User/Profile.jsx";
+import Settings from "./pages/User/Settings.jsx";
+
 export default function AppRoutes() {
   return (
     <Routes>
@@ -69,6 +73,10 @@ export default function AppRoutes() {
 
         {/* Reports & Analytics */}
         <Route path="/reports" element={<Reports />} />
+
+        {/* User Profile & Settings */}
+        <Route path="/profile" element={<Profile />} />
+        <Route path="/settings" element={<Settings />} />
       </Route>
 
       {/* ---------- FALLBACK ---------- */}

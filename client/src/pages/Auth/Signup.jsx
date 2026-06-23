@@ -44,8 +44,14 @@ export default function Signup() {
         role: formData.role 
       });
 
-      if (response.status === 201) {
-        navigate("/login");
+      if (response.data.token) {
+        localStorage.setItem("token", response.data.token);
+        localStorage.setItem("user", JSON.stringify({
+          name: response.data.name,
+          role: response.data.role,
+          email: response.data.email
+        }));
+        navigate("/dashboard");
       }
     } catch (err) {
       const errorMsg = err.response?.data?.message || "Registration failed. Try again.";
